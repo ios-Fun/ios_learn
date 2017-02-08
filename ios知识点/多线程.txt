@@ -1,0 +1,99 @@
+
+http://www.tuicool.com/articles/rQNZruA
+http://www.jianshu.com/p/266bec7c4dd2
+
+//dispatch_once
+http://www.dreamingwish.com/article/gcd-guide-dispatch-once-2.html%EF%BC%88%E8%B6%85%E7%BA%A7%E8%AF%A6%E7%BB%86%E8%A7%A3%E6%9E%90%EF%BC%89
+
+1.线程是什么？进程是什么？二者有什么区别和联系？  
+一个程序至少有一个进程,一个进程至少有一个线程： 
+进程：一个程序的一次运行，在执行过程中拥有独立的内存单元，而多个线程共享一块内存 
+线程：线程是指进程内的一个执行单元。 
+联系：线程是进程的基本组成单位 
+区别：(1)调度：线程作为调度和分配的基本单位，进程作为拥有资源的基本单位  (2)并发性：不仅进程之间可以并发执行，同一个进程的多个线程之间也可并发执行  (3)拥有资源：进程是拥有资源的一个独立单位，线程不拥有系统资源，但可以访问隶属于进程的资源.  (4)系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销
+
+
+ios多线程方案
+
+1. NSThread
+runloop关系
+
+
+2. gcd
+和block关系
+
+
+3. NSOpration
+
+常用的有三种: NSThread NSOperationQueue GCD。
+    1、NSThread 是这三种范式里面相对轻量级的，但也是使用起来最负责的，
+    你需要自己管理thread的生命周期，线程之间的同步。线程共享同一应用程序的部分内存空间，
+    它们拥有对数据相同的访问权限。你得协调多个线程对同一数据的访问，
+    一般做法是在访问之前加锁，这会导致一定的性能开销。
+    2、NSOperationQueue 以面向对象的方式封装了用户需要执行的操作，
+    我们只要聚焦于我们需要做的事情，而不必太操心线程的管理，同步等事情，
+    因为NSOperation已经为我们封装了这些事情。 
+    NSOperation 是一个抽象基类，我们必须使用它的子类。
+    3、 GCD: iOS4 才开始支持，它提供了一些新的特性，以及运行库来支持多核并行编程，
+    它的关注点更高：如何在多个cpu上提升效率。
+
+    总结：
+    - NSThread是早期的多线程解决方案，实际上是把C语言的PThread线程管理代码封装成OC代码。
+    - GCD是取代NSThread的多线程技术，C语法+block。功能强大。
+    - NSOperationQueue是把GCD封装为OC语法，额外比GCD增加了几项新功能。
+        * 最大线程并发数
+        * 取消队列中的任务
+        * 暂停队列中的任务
+        * 可以调整队列中的任务执行顺序，通过优先级
+        * 线程依赖
+        * NSOperationQueue支持KVO。 这就意味着你可以观察任务的状态属性。
+    但是NSOperationQueue的执行效率没有GCD高，所以一半情况下，我们使用GCD来完成多线程操作。
+
+
+1. dispatch_once的原理？？
+
+2. 写传统方法单例注意原子性，多线程时安全性？
+
+3. 使用atomic一定是线程安全的吗？
+@synchronized
+NSLock
+NSCondition
+NSConditionLock
+NSRecursiveLock
+pthread_mutex_t
+OSSpinLock(自旋锁)
+dispatch_barrier_async
+
+耗时方面：
+OSSpinlock耗时最少;
+pthread_mutex其次。
+NSLock/NSCondition/NSRecursiveLock 耗时接近，220ms上下居中。
+NSConditionLock最差，我们常用synchronized倒数第二。
+dispatch_barrier_async也许，性能并不像我们想象中的那么好.推测与线程同步调度开销有关。单独block耗时在1ms以下基本上可以忽略不计的。
+
+看这题的问法不用想答案肯定是NO。有些人说不出所以然，有些人知道通过property的方式使用才能保证安全，还有人知道这个用来做多线程安全会有性能损耗，更有出色的候选人能谈atomic,synchronized,NSLock,pthread mutex,OSSpinLock的差别。
+
+1. 问题： 线程如何停止？
+
+2. 问题：你们项目中为什么多线程用GCD而不用NSOperation呢? 你有没有发现国外的大牛他们多线程都是用NSOperation? 你能告诉我他们这样做的理由吗?
+①:先搞清两者的关系,NSOpertaionQueue用GCD构建封装的，是GCD的高级抽象!
+
+②:GCD仅仅支持FIFO队列，而NSOperationQueue中的队列可以被重新设置优先级，从而实现不同操作的执行顺序调整。GCD不支持异步操作之间的依赖关系设置。如果某个操作的依赖另一个操作的数据（生产者-消费者模型是其中之一），使用NSOperationQueue能够按照正确的顺序执行操作。GCD则没有内建的依赖关系支持。
+
+③:NSOperationQueue支持KVO，意味着我们可以观察任务的执行状态。可以监测operation是否正在执行（isExecuted）、是否结束（isFinished），是否取消（isCanceld）
+
+3. 发送10个网络请求，然后再接收到所有回应之后执行后续操作，如何实现？
+从题目分析可知，10个请求要全部完成后，才执行某一功能。比如，下载10图片后合成一张大图，就需要异步全部下载完成后，才能合并成大图。
+做法：通过dispatch_group_t来实现，将每个请求放入到Group中，将合并成大图的操作放在dispatch_group_notify中实现。
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+dispatch_group_t group = dispatch_group_create();
+dispatch_group_async(group, queue, ^{ /*加载图片1 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片2 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片3 */ }); 
+dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+    // 合并图片
+});
+
+4. 如何用gcd实现NSOpration的最大并发数？
+
+

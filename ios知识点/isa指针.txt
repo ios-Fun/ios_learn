@@ -1,0 +1,88 @@
+ Objective-C 类的结构体和一个对象的结构体。objc_object 只有一个指向类的 isa 指针。这个 isa 指针是当你向对象发送消息时，Objective-C Runtime 检查一个对象并且查看它的类是什么然后开始查看它是否响应这些 selectors 所需要的一切。
+
+ Class Cache 是什么？（objc_cache *cache）
+这个类实现了一个缓存，当你搜索一个类的分发表，并找到合适的 selector 后，就会把它放进缓存中。所以当 objc_msgSend() 在一个类中查找 selector 时会先查找类缓存。
+
+例如： 
+MyObject *obj = [[MyObject alloc] init]; 
+@implementation MyObject
+- (id)init {
+    if(self = [super init]) {
+        [self setVarA:@”blah”];    
+    }
+    return self;
+}
+@end
+
+(1) [MyObject alloc] 首先被执行。MyObject 没有实现 alloc 方法，所以我们不能在这个类中找到 +alloc 方法，然后沿着 superclass 指针会指向 NSObject。
+(2) 我们询问 NSObject 是否响应 +alloc 方法，它可以。+alloc 检查消息的接收者类，是 MyObject，然后分配一块和我们的类同样大小的内存空间，并初始化它的 isa 指针指向 MyObject 类，我们现在有了一个实例对象，最终把类对象的 +alloc 方法加入 NSObject 的类缓存（class cache）中
+(3) 到现在为止，我们发送了一个类消息，但是现在我们发送一个实例消息，只是简单的调用 -init 或者我们设计的初始化方法。当然，我们的类会响应这个方法，所以 -(id)init 加入到缓存中。
+(4) 然后 self = [super init] 被调用。super 是个 magic keyword，指向对象的父类，所以我们得到了 NSObject 并调用它的的 init 方法。这样可以确保 OOP（面相对象编程） 的继承功能正常，这个方法可以正确的初始化父类的变量，之后你（在子类中）可以初始化自己的变量，如果需要可以覆盖父类的方法。
+
+
+问题：分类为什么不能添加实例变量？
+
+struct _category_t { 
+    const char *name; 
+    struct _class_t *cls; 
+    const struct _method_list_t *instance_methods; 
+    const struct _method_list_t *class_methods;  
+    const struct _protocol_list_t *protocols; 
+    const struct _prop_list_t *properties; 
+}; 
+
+没有isa指针。
+
+里面虽然可以添加 property，但是这些 properties 并不会自动生成 Ivar，也就是不会有 @synthesize 的作用，dyld 加载的期间，这些 categories 会被加载并 patch 到相应的类中。这个过程是一个动态过程，Ivar 不能动态添加，因为表示 ObjC 类的结构体运行时并不能改变。
+
+问题：成员变量的本质是什么？
+
+成员变量：
+Ivar: 实例变量类型，是一个指向objc_ivar结构体的指针
+
+// 获取所有成员变量
+class_copyIvarList
+
+// 获取成员变量名
+ivar_getName
+
+// 获取成员变量类型编码
+ivar_getTypeEncoding
+
+// 获取指定名称的成员变量
+class_getInstanceVariable
+
+// 获取某个对象成员变量的值
+object_getIvar
+
+// 设置某个对象成员变量的值
+object_setIvar
+
+属性：
+objc_property_t：声明的属性的类型，是一个指向objc_property结构体的指针
+typedef struct objc_property *objc_property_t;
+
+// 获取所有属性
+class_copyPropertyList
+
+// 获取属性名
+property_getName
+
+// 获取属性特性描述字符串
+property_getAttributes
+
+// 获取所有属性特性
+property_copyAttributeList
+
+添加属性：
+ objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+获取属性：
+id objc_getAssociatedObject(id object, const void *key)
+
+应用场景：
+1. Json到Model的转化，如MJExtension
+原理是：获取Model的属性列表，遍历属性的名字加入数组，然后通过kvc设值
+
+2. 快速归档
+
+3. 访问私有变量

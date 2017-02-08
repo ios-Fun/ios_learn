@@ -1,1 +1,25 @@
 block相关知识点
+
+struct Block_literal_1 {
+    void *isa; // initialized to &_NSConcreteStackBlock or &_NSConcreteGlobalBlock    
+    int flags;    
+    int reserved;     
+    void (*invoke)(void *, ...); 
+    struct Block_descriptor_1 { 
+        unsigned long int reserved; // NULL     
+        unsigned long int size;  // sizeof(struct Block_literal_1)
+        // optional helper functions     
+        void (*copy_helper)(void *dst, void *src);
+        void (*dispose_helper)(void *src);     
+    } *descriptor;    
+    // imported variables
+};
+
+Blocks 被设计为兼容 Objective-C 的 runtime，所以他们被作为对象对待，因此他们可以响应消息，比如 -retain，-release，-copy ，等等。
+
+
+weak self和strong self？
+
+
+有些时候直接用self，不需要用weak self。
+

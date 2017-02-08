@@ -1,0 +1,39 @@
+http://blog.ibireme.com/2015/05/18/runloop/
+
+function loop() {
+    initialize();
+    do {
+        var message = get_next_message();
+        process_message(message);
+    } while (message != quit);
+}
+
+所以，RunLoop 实际上就是一个对象，这个对象管理了其需要处理的事件和消息，并提供了一个入口函数来执行上面 Event Loop 的逻辑。线程执行了这个函数后，就会一直处于这个函数内部 "接受消息->等待->处理" 的循环中，直到这个循环结束（比如传入 quit 的消息），函数返回。
+
+OSX/iOS 系统中，提供了两个这样的对象：NSRunLoop 和 CFRunLoopRef。
+CFRunLoopRef 是在 CoreFoundation 框架内的，它提供了纯 C 函数的 API，所有这些 API 都是线程安全的。
+NSRunLoop 是基于 CFRunLoopRef 的封装，提供了面向对象的 API，但是这些 API 不是线程安全的。
+
+首先，iOS 开发中能遇到两个线程对象: pthread_t 和 NSThread。NSThread 只是 pthread_t 的封装。CFRunLoop 是基于 pthread 来管理的。
+
+线程刚创建时并没有 RunLoop，如果你不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。
+
+CFRunLoopObserverRef 是观察者，每个 Observer 都包含了一个回调（函数指针），当 RunLoop 的状态发生变化时，观察者就能通过回调接受到这个变化。可以观测的时间点有以下几个：
+
+
+typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
+    kCFRunLoopEntry         = (1UL << 0), // 即将进入Loop
+    kCFRunLoopBeforeTimers  = (1UL << 1), // 即将处理 Timer
+    kCFRunLoopBeforeSources = (1UL << 2), // 即将处理 Source
+    kCFRunLoopBeforeWaiting = (1UL << 5), // 即将进入休眠
+    kCFRunLoopAfterWaiting  = (1UL << 6), // 刚从休眠中唤醒
+    kCFRunLoopExit          = (1UL << 7), // 即将退出Loop
+};
+
+应用场景举例：主线程的 RunLoop 里有两个预置的 Mode：kCFRunLoopDefaultMode 和 UITrackingRunLoopMode。这两个 Mode 都已经被标记为"Common"属性。DefaultMode 是 App 平时所处的状态，TrackingRunLoopMode 是追踪 ScrollView 滑动时的状态。当你创建一个 Timer 并加到 DefaultMode 时，Timer 会得到重复回调，但此时滑动一个TableView时，RunLoop 会将 mode 切换为 TrackingRunLoopMode，这时 Timer 就不会被回调，并且也不会影响到滑动操作。
+
+RunLoop 的内部逻辑
+
+
+
+

@@ -1,0 +1,35 @@
+
+
+问题：举一个分类的例子？
+
+
+问题： 如何在分类中添加属性？
+
+通过runtime来添加属性
+static char staticcharstr='a';
+
+- (NSString*)a{
+
+return objc_getAssociatedObject(self, &strAddrNormalKey);
+
+}
+
+-(void)setA:(NSString*)a{
+
+objc_setAssociatedObject(self, &strAddrNormalKey, normalColor,OBJC_ASSOCIATION_COPY_NONATOMIC);
+
+}
+
+
+问题：分类为什么不能添加成员变量？
+分类本身并不是一个真正的类，它并没有自己的ISA。分类只会将自己的method attach到主类，并不会影响到主类的IvarList。
+
+问题：分类和扩展的区别？
+
+ iOS中的extension就是匿名的分类，只有头文件没有实现文件。只能扩展方法，不能添加成员变量。扩展的方法只能在原类中实现。例如你扩展NSString,那么你只能在NSString的.m实现（这是不可能的），所以尽量少用扩展。用分类就可以了。
+
+extension到底能不能添加成员变量？应该是不能。
+
+区别：
+1. 分类不能直接添加属性，要通过runTime来添加，扩展是可以的。
+2. 扩展添加的方法必须实现。

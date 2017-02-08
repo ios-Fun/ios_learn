@@ -1,1 +1,73 @@
-runtime相关知识点
+
+阅读源码：http://opensource.apple.com.
+
+Objective-C是运行时语言，它会尽可能的把编译和链接时要执行的逻辑延迟到运行时。
+那swift呢？
+
+
+Runtime是这就是说它在类信息（Class information） 中被加载，完成所有的方法分发，方法转发。
+
+
+Method Swizzling 方法交换
+https://github.com/rentzsch/jrswizzle
+
+应用场景：
+1. NSObject:
+setValue forKey
+setValue forKeyPath
+setValue forUndefinedKey
+setValuesForKeysWithDictionary
+
+2. NSArray
+arrayWithObjects
+objectAtIndex
+getObjects
+
+3. NSMutableArray
+objectAtIndex
+setObject atIndexedSubscript
+removeObjectAtIndex
+insertObject atIndex
+getObjects range
+
+4. NSDictionary
+
+5. NSMutableDictionary
+setObject forKey
+removeObjectForKey
+
+6. NSString
+
+7. NSMutableString
+
+8. NSAttributedString
+
+9. NSMutableAttributedString
+
+
+方法交换：
+method_exchangeImplementations(method1, method2);
+
+获取类方法：
+Method mothod1 = class_getClassMethod(className, methodSel);
+
+获取对象的方法：
+Method mothod1 = class_getInstanceMethod(anClass, method1Sel);
+
+a.先添加方法
+class_addMethod(Class, SEL,IMP, const char* types)
+
+b.没有该方法，旧替换方法
+class_replaceMethod(Class,SEL,IMP, const char* types)
+
+c.已有该方法，交换方法实现
+method_exchangeImplementations(originalMethod, swizzledMethod)
+
+
+应用场景：
+UIViewController(Test)分类
+实现deallocSwizzle，在viewController关闭时，打印log
+
+
+
+

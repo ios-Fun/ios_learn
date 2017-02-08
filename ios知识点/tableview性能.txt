@@ -1,0 +1,99 @@
+
+http://blog.ibireme.com/2015/11/12/smooth_user_interfaces_for_ios/
+http://www.jianshu.com/p/8f3ed86e6480
+
+1、每次都看一下有没有能重用的 cell，而不是永远重新新建（这个是 UITableView 的常识）
+2、Cell 里尽量不要用 UIView 而是全部自己用 drawRect 画（之前因为 iOS 有 bug，这样做会有性能上质的飞越。也有很多大神写过很多文章解释原理，有兴趣的自己去看看吧我就不做复制粘贴了。后来 iOS 也改掉了这个问题，这么做的效果就没那么明显了。）
+3、（异步加载）图片载入放到后台进程去进行，滚出可视范围的载入进程要 cancel 掉
+4、圆角、阴影之类的全部 bitmap 化，或者放到后台 draw 好了再拿来用
+5、Cell 里要用的数据提前缓存好，不要现用现去读文件
+6、数据量太大来不及一次读完的做一个 load more cell 出来，尽量避免边滚边读数据，这样就算是双核的 CPU 也难保不会抽
+7. 高度缓存
+
+8. 使用懒加载
+
+作者：徐哲
+链接：https://www.zhihu.com/question/20382396/answer/14964190
+来源：知乎
+著作权归作者所有，转载请联系作者获得授权。
+
+
+如何tableview滑动到了时图片优先下载显示
+
+1.不要用AutoLayout，老的设备计算吃力
+
+2. UITableViewCell 上的子View的opaque属性设为YES。其实默认也是不透明。UITableViewCell尽量不要包含透明的子View。
+
+3. shouldRasterize = YES  更为彻底的做法是直接在后台绘制圆角图片然后输出到主线程显示
+
+4. 在cellview里，重写drawRect函数绘制UITableViewCell的内容。
+
+
+CPU 资源消耗原因和解决方案
+1. 对象创建
+如果对象不涉及 UI 操作，则尽量放到后台线程去创建。那么不需要响应触摸事件的控件，用 CALayer 显示会更加合适
+尽量推迟对象创建的时间（懒加载？？？）
+复用对象（缓冲池）
+
+2. 对象调整
+UIView 的关于显示相关的属性（比如 frame/bounds/transform）等实际上都是 CALayer 属性映射来的，所以对 UIView 的这些属性进行调整时，消耗的资源要远大于一般的属性。对此你在应用中，应该尽量减少不必要的属性修改。
+
+3. 对象销毁
+如果对象可以放到后台线程去释放，那就挪到后台线程去。
+
+4. 布局计算
+视图布局的计算是 App 中最为常见的消耗 CPU 资源的地方。如果能在后台线程提前计算好视图布局、并且对视图布局进行缓存。
+
+5. Autolayout
+Autolayout 对于复杂视图来说常常会产生严重的性能问题。随着视图数量的增长，Autolayout 带来的 CPU 消耗会呈指数级上升
+使用 ComponentKit、AsyncDisplayKit 等框架
+
+6. 文本计算???
+
+7. 文本渲染???
+
+8. 图片的解码???
+
+9. 图片的绘制???
+
+
+GPU 资源消耗原因和解决方案
+
+GPU 能干的事情比较单一：接收提交的纹理（Texture）和顶点描述（三角形），应用变换（transform）、混合并渲染，然后输出到屏幕上
+
+1. 纹理的渲染
+
+2. 视图的混合？？？
+透明度设置不透明
+
+3. 图形的生成。
+
+CALayer 的 border、圆角、阴影、遮罩（mask），CASharpLayer 的矢量图形显示，通常会触发离屏渲染（offscreen rendering）
+开启 CALayer.shouldRasterize 属性，但这会把原本离屏渲染的操作转嫁到 CPU 上去。对于只需要圆角的某些场合，也可以用一张已经绘制好的圆角图片覆盖到原本视图上面来模拟相同的视觉效果。最彻底的解决办法，就是把需要显示的图形在后台线程绘制为图片，避免使用圆角、阴影、遮罩等属性。
+
+慎用ShouldRasterize
+
+2. tableView中，如果cell高度由内容相关，需要缓存高度以提高滑动效率
+  （这样不需要每次滑动都计算一遍高度）
+提前计算后各个控件的frame并把cell的高度提前缓存起来等到调用-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath时直接return _cellHeight，没有任何计算量，从而减轻CPU的负载
+
+【3】tableView中，cell高度固定，使用tableView.rowHeight  = 100 这种方式设置cell高度
+  （这样不会频繁调用height代理方法，效率最优）
+
+5】页面中少用动态添加View，而是在初始化时全部画好，控制是否隐藏或者视图切换实现动态效果
+  （原则就是把子控件利用加载的时间一次创建好，不要在用户操作的同时进行视图的申请操作，view是很大的对象，创建它会消耗较多资源，并且也影响渲染的性能）
+
+【7】加载图片的时候需要使用多线程+缓存
+  （多线程保证UI线程流畅，缓存避免重复加载）
+
+【10】开销比较大的对象，例如dateFormatter，需要重用
+
+【四】性能问题的处理流程
+ ［1］发现和重现问题
+ ［2］利用Instruments工具剖析
+ ［3］假设出现问题的原因
+ ［4］改进代码和设计
+ 上述四个步骤循环反复，直到问题解决
+Instruments中的众多工具是解决程序性能问题和漏洞的协助手段，一般情况下不会只执行一次就能精准定位问题，需要多次循环反复，不断测试直到问题解决。
+
+总之，性能优化要注意平衡CPU和GPU的负载

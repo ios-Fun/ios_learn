@@ -1,0 +1,34 @@
+
+https://www.zhihu.com/question/22914651
+ 
+Charles
+LLVM/Clang
+Reveal:界面调试工具
+
+YYKit
+
+RESTful API
+
+NSURLCache使用
+NSHTTPCookieStorage
+
+https://github.com/yuantiku/YTKNetwork
+不但将 Controller 中的代码瘦身，而且进一步演化和加强，现在它还支持诸如复杂网络请求管理，断点续传，插件机制，JSON 合法性检查等功能
+
+https://github.com/chenfanfang/AvoidCrash 避免常见异常崩溃
+
+SDWebImage原理？？
+
+//检测循环引用
+https://github.com/facebook/FBRetainCycleDetector
+
+https://github.com/ibireme/YYDispatchQueuePool
+//缓存池
+
+https://github.com/forkingdog/UITableView-FDTemplateLayoutCell
+//cell动态高度
+
+
+
+
+

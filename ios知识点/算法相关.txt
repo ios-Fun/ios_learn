@@ -1,0 +1,11 @@
+
+1. 排序
+选择排序，冒泡排序，快速排序
+
+2. 已有一个UIView a，如何查找a所在viewController距离它最近的UIView？
+
+
+3. 两个UIView， 查找它们的公共的superView，没有返回nil。
+
+
+

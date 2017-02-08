@@ -1,0 +1,65 @@
+
+
+会转换为 objc_msgSend(receiver, @selector(message));
+
+首先 runtime定义了如下的数据类型：
+
+typedef struct objc_class *Class;
+typedef struct objc_object *id;
+struct objc_object {
+    Class isa;
+};
+struct objc_class {
+    Class isa;
+}
+ 
+/// 不透明结构体, selector
+typedef struct objc_selector *SEL;
+ 
+/// 函数指针, 用于表示对象方法的实现
+typedef id (*IMP)(id, SEL, ...);
+id指代objc中的对象，每个对象的在内存的结构并不是确定的，但其首地址指向的肯定是isa。通过isa指针，运行时就能获取到objc_class。
+
+objc_class表示对象的Class，它的结构是确定的，由编译器生成。
+
+SEL表示选择器，这是一个不透明结构体。但是实际上，通常可以把它理解为一个字符串。例如printf("%s",@selector(isEqual:))会打印出"isEqual:"。运行时维护着一张SEL的表，将相同字符串的方法名映射到唯一一个SEL。  通过sel_registerName(char *name)方法，可以查找到这张表中方法名对应的SEL。苹果提供了一个语法糖@selector用来方便地调用该函数。
+
+IMP是一个函数指针。objc中的方法最终会被转换成纯C的函数，IMP就是为了表示这些函数的地址。
+
+
+3.obj_msgSend的动作
+[obj makeText];
+首先，编译器将代码[obj makeText];转化为objc_msgSend(obj, @selector (makeText));，在objc_msgSend函数中。首先通过obj的isa指针找到obj对应的class。在Class中先去cache中 通过SEL查找对应函数method（猜测cache中method列表是以SEL为key通过hash表来存储的，这样能提高函数查找速度），若 cache中未找到。再去methodList中查找，若methodlist中未找到，则取superClass中查找。若能找到，则将method加 入到cache中，以方便下次查找，并通过method中的函数指针跳转到对应的函数中去执行。
+
+objc_msgSend函数
+在引言中已经对objc_msgSend进行了一点介绍，看起来像是objc_msgSend返回了数据，其实objc_msgSend从不返回数据而是你的方法被调用后返回了数据。下面详细叙述下消息发送步骤：
+1. 检测这个 selector 是不是要忽略的。比如 Mac OS X 开发，有了垃圾回收就不理会 retain, release 这些函数了。
+2. 检测这个 target 是不是 nil 对象。ObjC 的特性是允许对一个 nil 对象执行任何一个方法不会 Crash，因为会被忽略掉。
+3. 如果上面两个都过了，那就开始查找这个类的 IMP，先从 cache 里面找，完了找得到就跳到对应的函数去执行。
+4. 如果 cache 找不到就找一下方法分发表。
+5. 如果分发表找不到就到超类的分发表去找，一直找，直到找到NSObject类为止。
+6. 如果还找不到就要开始进入动态方法解析了，后面会提到。
+
+
+4.消息转发
+
+在本类和父类中找不到方法时。尝试做消息转发。
+
+结合NSObject文档可以知道，_objc_msgForward消息转发做了如下几件事：
+1.调用resolveInstanceMethod:方法，允许用户在此时为该Class动态添加实现。如果有实现了，则调用并返回。如果仍没实现，继续下面的动作。
+(BOOL)resolveInstanceMethod:(SEL)sel 和+(BOOL)resolveClassMethod:(SEL)sel，当方法是实例方法时调用前者，当方法为类方法时，调用后者。这个方法设计的目的是为了给类利用 class_addMethod 添加方法的机会。
+
+
+2.调用forwardingTargetForSelector:方法，尝试找到一个能响应该消息的对象。如果获取到，则直接转发给它。如果返回了nil，继续下面的动作。
+
+3.调用forwardInvocation:方法，将地3步获取到的方法签名包装成Invocation传入，如何处理就在这里面了。
+
+在一个函数找不到时，OC提供了三种方式去补救：
+a、调用resolveInstanceMethod给个机会让类添加这个实现这个函数
+b、调用forwardingTargetForSelector（转发对象）让别的对象去执行这个函数
+c、调用forwardInvocation（转发调用）灵活的将目标函数以其他形式执行。
+
+如果都不中，调用doesNotRecognizeSelector抛出异常。
+
+
+

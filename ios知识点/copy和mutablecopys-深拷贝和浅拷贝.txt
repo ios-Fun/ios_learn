@@ -1,0 +1,17 @@
+
+
+浅拷贝： 指针拷贝，复制了指针，两个指针指向同一个对象，这个对象销毁后两个指针都应该置空。
+
+深拷贝： 对一个对象进行拷贝，就会有两个指针分别指向两个对象。其中一个对象改变或销毁不会对另一个对象有影响。
+
+NSCopying
+NSCopying是一个与对象拷贝有关的协议。如果想让一个类的对象支持拷贝，就需要让该类实现NSCopying协议。NSCopying协议中的声明的方法只有一个- (id)copyWithZone:(NSZone *)zone。
+
+NSMutableCopying
+返回的对象是可变类型的。
+
+NSArray对象调用copy方法时，copy方法会调用- (id)copyWithZone:(NSZone *)zone，得到对象的一份拷贝，但得到的对象还是不可变的对象。而NSArray对象调用mutableCopy方法时，mutableCopy方法会调用- (id)mutableCopyWithZone:(NSZone *)zone，得到可变的对象。
+
+
+
+

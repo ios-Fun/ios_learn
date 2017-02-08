@@ -1,0 +1,36 @@
+
+
+http://www.jianshu.com/p/d02a5c5570e3
+
+block定义
+struct Block_descriptor {
+    unsigned long int reserved;
+    unsigned long int size;
+    void (*copy)(void *dst, void *src);
+    void (*dispose)(void *);
+};
+
+
+struct Block_layout {
+    void *isa;
+    int flags;
+    int reserved; 
+    void (*invoke)(void *, ...);
+    struct Block_descriptor *descriptor;
+    /* Imported variables. */
+};
+
+
+问题：block的原理？？？
+block 本质应该是一个函数指针加上一个对应捕获上下文变量的内存块（结构体或者类)
+
+block对象就是一个结构体，里面有isa指针指向自己的类（global malloc stack），有desc结构体描述block的信息，__forwarding指向自己或堆上自己的地址，如果block对象截获变量，这些变量也会出现在block结构体中。最重要的block结构体有一个函数指针，指向block代码块。block结构体的构造函数的参数，包括函数指针，描述block的结构体，自动截获的变量（全局变量不用截获），引用到的__block变量。(__block对象也会转变成结构体)
+
+block代码块在编译的时候会生成一个函数，函数第一个参数是前面说到的block对象结构体指针。执行block，相当于执行block里面__forwarding里面的函数指针。
+
+问题：__block的原理？
+加了__block前缀，并不是直接传递a的值了，而是把a的地址传过去了，所以在block内部便可以修改到外面的变量了。
+
+
+
+

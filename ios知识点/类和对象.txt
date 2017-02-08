@@ -1,0 +1,24 @@
+
+//Class的实际结构
+struct _class_t {
+	struct _class_t *isa;        //isa指针
+	struct _class_t *superclass; //父类
+	void *cache;
+	void *vtable;
+	struct _class_ro_t *ro;     //Class包含的信息
+};
+
+
+struct objc_object {
+    struct objc_class *isa;
+};
+ 
+typedef struct objc_class *Class; //类  (class object)
+typedef struct objc_object *id;   //对象 (instance of class)
+
+在objc中，id代表了一个对象。根据上面的声明，凡是首地址是*isa的struct指针，都可以被认为是objc中的对象。运行时可以通过isa指针，查找到该对象是属于什么类(Class)
+
+
+
+
+

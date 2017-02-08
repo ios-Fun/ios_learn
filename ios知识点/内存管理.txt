@@ -1,0 +1,72 @@
+
+
+//__block和__weak的区别
+http://honglu.me/2015/01/06/weak%E4%B8%8Eblock%E5%8C%BA%E5%88%AB/
+
+ARC：自动引用计数
+MRC：手动引用计数
+
+
+什么是引用计数？
+引用计数（Reference Count）是一个简单而有效的管理对象生命周期的方式。当我们创建一个新对象的时候，它的引用计数为 1，当有一个新的指针指向这个对象时，我们将其引用计数加 1，当某个指针不再指向这个对象是，我们将其引用计数减 1，当对象的引用计数变为 0 时，说明这个对象不再被任何指针指向了，这个时候我们就可以将对象销毁，回收内存。
+
+问题：什么时候必须用MRC？
+大概是 遇到底层 Core Foundation 对象。
+
+循环引用（Reference Cycle）问题
+举个实例：
+block是self的属性，block里面调用self
+
+避免循环引用的方法：
+1. 主动断开循环引用:
+在网络请求结束后，网络请求对象执行完 block 之后，主动释放对于 block 的持有，以便打破循环引用
+例如将self.block = nil
+
+2. 使用弱引用。
+
+
+
+weak问题：
+1. delegate为什么用weak？
+两个 ViewController A 和 B，ViewController A 需要弹出 ViewController B，让用户输入一些内容，当用户输入完成后，ViewController B 需要将内容返回给 ViewController A。这个时候，View Controller 的 delegate 成员变量通常是一个弱引用，以避免两个 ViewController 相互引用对方造成循环引用问题。
+
+2. IBAction为什么用weak？手写UIView时，控件是否也要weak？
+a. 我们在创建这个对象时，需要注意临时使用一个强引用持有它，否则因为 weak 变量并不持有对象，就会造成一个对象刚被创建就销毁掉。
+b. 大部分 ViewController 的视图对象的生命周期与 ViewController 本身是一致的，没有必要额外做这个事情。
+c. 早先苹果这么设计，是有历史原因的。在早年，当时系统收到 Memory Warning 的时候，ViewController 的 View 会被 unLoad 掉。这个时候，使用 weak 的视图变量是有用的，可以保持这些内存被回收。但是这个设计已经被废弃了，替代方案是将相关视图的 CALayer 对应的 CABackingStore 类型的内存区会被标记成 volatile 类型。
+
+
+
+弱引用的实现原理（weak指针释放时置为nil的原因）
+用到了一个哈希表：
+弱引用的实现原理是这样，系统对于每一个有弱引用的对象，都维护一个表来记录它所有的弱引用的指针地址。这样，当一个对象的引用计数为 0 时，系统就通过这张表，找到所有的弱引用指针，继而把它们都置成 nil。
+
+
+使用Xcode检测循环引用：
+Instruments工具 Product -> Profile —> Leaks
+
+3. __weak和__block???
+环境：block函数内
+先写结论：
+在MRC下，我们通常使用__block，而在ARC下我们通常使用__weak, 或者__unsafe_unretaine __block（不安全，不建议使用） 来修饰对象防止循环引用而造成的内存泄露。
+
+注意：
+__weak 本身是可以避免循环引用的问题的，但是其会导致外部对象释放了之后，block 内部也访问不到这个对象的问题，我们可以通过在 block 内部声明一个 __strong 的变量来指向 weakObj，使外部对象既能在 block 内部保持住，又能避免循环引用的问题
+__block 本身无法避免循环引用的问题，但是我们可以通过在 block 内部手动把 blockObj 赋值为 nil 的方式来避免循环引用的问题。另外一点就是 __block 修饰的变量在 block 内外都是唯一的，要注意这个特性可能带来的隐患。
+
+
+在MRC中，
+__block通过用在修改局部变量数据，使变量数据生效，变量会在内存中强引用。
+__block关键字可以满足block内修改block外变量的需求，__weak可以解决循环引用的问题
+
+问题：__block也可以解决循环引用的问题?
+为什么会说block也可以起到和weak一样的作用呢？
+以前在非arc环境中，__block修饰的变量在Block copy时是不会retain的，所以，也可以做到破解循环引用。
+所以说是指在非ARC环境中__block可以解决循环引用问题
+
+1.__block不管是ARC还是MRC模式下都可以使用，可以修饰对象，还可以修饰基本数据类型。 
+2.__weak只能在ARC模式下使用，也只能修饰对象（NSString），不能修饰基本数据类型（int）。 
+3.__block对象可以在block中被重新赋值，__weak不可以。 
+4.__block对象在ARC下可能会导致循环引用，非ARC下会避免循环引用，__weak只在ARC下使用，可以避免循环引用。
+
+

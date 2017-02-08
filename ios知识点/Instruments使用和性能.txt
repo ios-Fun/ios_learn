@@ -1,0 +1,71 @@
+
+http://www.cocoachina.com/ios/20150429/11712.html
+
+Time Profiler,Core Animation
+
+
+
+1、leaks——检查内存泄露（基本使用）
+
+2. Time Profiler
+检测应用cpu的使用情况
+
+3、Allocation + Activity Monitor——检查内存申请
+
+4. CoreAnimation + OpenGL ES Driver
+检查图层问题
+
+
+1.NSDateFormatter问题凸显
+NSDateFormatter对象本身初始化很慢,同样还有NSCalendar也是如此.然而在一些使用场景中不可避免要使用他们,比如Json数据解析中.使用这个对象同时避免其性能开销带来性能开销,一般比较好的方式是通过添加属性(推荐)或创建静态变量保持该对象只被初始化一次，而被多次复用.不得不值得一提的是设置一个NSDateFormatter属性速度差不多是和创建新的实例对象一样慢！
+
+
+2.UIImage缓存取舍
+A：imagedNamed
+B：imageWithContentsOfFile
+
+3. 多线程异步加载？？？
+
+内存检测
+
+
+模拟器中的:
+
+Color debug options View debugging
+
+还有Xcode的：
+
+View debugging
+
+//性能 关于渲染
+总之,我们通常需要避免大量的offscreen rendering.
+layer相关的使用
+layer.mask
+layer.masksToBounds
+layer.allowsGroupOpacity set to YES and layer.opacity is less than 1.0
+layer.shadow
+layer.shouldRasterize
+layer.cornerRadius
+
+解决方法
+阴影绘制:使用ShadowPath来替代shadowOffset等属性的设置。
+
+裁剪图片为圆:
+使用了layer.cornerRadius会影响性能
+
+首先,我们要有一个定位问题的模式。我们可以按照这样的顺序来逐步定位,发现问题。
+
+定位帧率,为了给用户流畅的感受,我们需要保持帧率在60帧左右。当遇到问题后,我们首先检查一下帧率是否保持在60帧。
+定位瓶颈,究竟是CPU还是GPU。我们希望占用率越少越好,一是为了流畅性,二也节省了电力。
+检查有没有做无必要的CPU渲染,例如有些地方我们重写了drawRect,而其实是我们不需要也不应该的。我们希望GPU负责更多的工作。
+检查有没有过多的offscreen渲染,这会耗费GPU的资源,像前面已经分析的到的。offscreen 渲染会导致GPU需要不断地onScreen和offscreen进行上下文切换。我们希望有更少的offscreen渲染。
+检查我们有无过多的Blending,GPU渲染一个不透明的图层更省资源。
+检查图片的格式是否为常用格式,大小是否正常。如果一个图片格式不被GPU所支持,则只能通过CPU来渲染。一般我们在iOS开发中都应该用PNG格式,之前阅读过的一些资料也有指出苹果特意为PNG格式做了渲染和压缩算法上的优化。
+检查是否有耗费资源多的View或效果。我们需要合理有节制的使用。像之前提到的UIBlurEffect就是一个例子。
+最后,我们需要检查在我们View层级中是否有不正确的地方。例如有时我们不断的添加或移除View,有时就会在不经意间导致bug的发生。像我之前就遇到过不断添加View的一个低级错误。我们希望在View层级中只包含了我们想要的东西。
+
+
+
+
+
+

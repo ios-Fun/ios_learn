@@ -1,0 +1,56 @@
+
+
+OC转js工具
+JSPatch Convertor
+
+原理是利用了runtime：
+
+//根据类名称获取类
+Class class = NSClassFromString(“UIViewController");
+//实例化类对象
+id viewController = [[class alloc] init];  
+//根据方法名获取方法
+SEL selector = NSSelectorFromString(“viewDidLoad");
+//对象viewController调用方法selector
+[viewController performSelector:selector];
+
+//定义了一个方法newViewDidLoad
+static void newViewDidLoad(id slf, SEL sel) {}
+//替换方法selector和newViewDidLoad
+class_replaceMethod(class, selector, newViewDidLoad, @"");
+
+
+//根据父类和类名字创建class
+Class cls = objc_allocateClassPair(superCls, "JPObject", 0);
+//注册class
+objc_registerClassPair(cls);
+//给类添加方法
+class_addMethod(cls, selector, implement, typedesc);
+
+
+补丁更新策略：
+考虑到下一个提交的App版本已经修复了上一个版本的bug，所以不同的App版本对应的补丁版本肯定也不同。同一个App版本下，可以出现递增的补丁版本
+a. 补丁为全量更新，即新版本补丁包括旧版补丁的内容，更新后新版补丁覆盖旧版补丁
+b. 补丁分为可选补丁和必选补丁，必选补丁用于重大bug的修复，如果不更新必选补丁则App无法继续使用。
+
+JS脚本加密：（不知道腾讯的sdk是否有加密）
+1.对称加密。如zip 的加密压缩、AES 等加密算法。优点是简单，缺点是安全性低，易破解。若客户端被反编译，密码字段泄露，则完成破解。
+2.HTTPS。优点是安全性高，证书在服务端未泄露，就不会被破解。缺点是部署麻烦，如果服务器本来就支持 HTTPS，使用这种方案也是一种不错的选择。
+3.RSA校验。安全性高，部署简单。
+
+详细校验步骤如下:
+1.服务端计算出脚本文件的 MD5 值，作为这个文件的数字签名。
+2.服务端通过私钥加密第 1 步算出的 MD5 值，得到一个加密后的 MD5 值。
+3.把脚本文件和加密后的 MD5 值一起下发给客户端。
+4.客户端拿到加密后的 MD5 值，通过保存在客户端的公钥解密。
+5.客户端计算脚本文件的 MD5 值。
+6.对比第 4/5 步的两个 MD5 值（分别是客户端和服务端计算出来的 MD5 值），若相等则通过校验。
+
+客户端策略
+客户端具体策略如下图:
+1.用户打开App时，同步进行本地补丁的加载。
+2.用户打开App时，后台进程发起异步网络请求，获取服务器中当前App版本所对应的最新补丁版本和必须的补丁版本。
+3.获取补丁版本的请求回来后，跟本地的补丁版本进行对比。
+4.如果本地补丁版本小于必须版本，则提示用户，展示下载补丁界面，进行进程同步的补丁下载。下载完成后重新加载App和最新补丁，再进入App。
+5.如果本地补丁版本不小于必须版本，但小于最新版本，则进入App，不影响用户操作。同时进行后台进程异步静默下载，下载后补丁保存在本地。下次App启动时再加载最新补丁。
+6.如果版本为最新，则进入App。

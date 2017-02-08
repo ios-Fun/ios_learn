@@ -1,0 +1,38 @@
+
+
+不做任何声明的时候，默认的是：readWrite, atomic, strong
+
+assign:直接赋值，一般用于基础类型如int,bool,float等，或者NSIntger
+
+retain: release旧值，再retain新值，应用计数+1
+
+copy：release旧值，再copy新值，应用计数+1
+用的场景：
+     当修饰不可变类型的属性时，如NSArray、NSDictionary、NSString，用copy。
+     还有block属性，也是用copy。
+     当修饰可变类型的属性时，如NSMutableArray、NSMutableDictionary、NSMutableString，用strong。
+
+
+strong: 同retain，arc下使用
+
+weak: 同assign，arc下使用，weak指针会在所指向的对象释放后置为nil，好处是防止野指针。原理是系统维护了一个哈希表，当对象释放时，从该哈希表查找到对应的weak指针，然后置为nil。
+在一种情况下需要使用weak，就是需要避免循环引用。
+
+举一个循环引用的例子:
+
+@property(copy)MyBLock blockA;
+
+-(void)function{
+ 
+     self.blockA = ^{
+	self.a = ***;
+
+     }
+}
+
+
+
+
+atomic与noatomic是原子性与非原子性，实现真正的线程安全要自己去加lock。
+
+

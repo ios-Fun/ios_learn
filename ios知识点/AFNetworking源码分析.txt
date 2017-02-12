@@ -1,0 +1,30 @@
+method swizling
+
+加了一个通知
+af_resume
+
+af_suspend
+
+功能
+1. NSURLSession 网络核心请求
+
+2. Reachability 判断网络状态，监听网络状态
+
+3. Security 网络请求的安全性
+
+4. Serialization 请求与相应的序列化，反序列化
+
+5. UIKit 图片下载 等
+
+
+如何取消请求？
+http://www.jianshu.com/p/e0d13a58013e
+在viewController消失的时候触发取消请求操作。
+
+
+如何设置优先级？
+
+
+
+
+

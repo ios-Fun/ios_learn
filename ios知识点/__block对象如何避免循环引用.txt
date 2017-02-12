@@ -1,0 +1,8 @@
+在SDWebImage框架中
+
+__block SDWebImageCombinedOperation *operation = [SDWebImageCombinedOperation new];
+__weak SDWebImageCombinedOperation *weakOperation = operation;
+
+
+
+

@@ -1,0 +1,26 @@
+
+所谓运行时，也就是在编译时是不存在的，只是在运行过程中才去确定对象的类型、方法等。利用Runtime机制可以在程序运行时动态修改类、对象中的所有属性、方法等。
+
+
+http://blog.csdn.net/judy_luo/article/details/51025210
+
+a. 方法,属性
+动态性最重要的一点就是拿到某个类的方法和属性
+
+1:纯Swift类的函数调用已经不是OC那样的运行时消息了,而是类似C++似得vtable,在编译时就确定了调用那个函数了.
+
+
+2:而TestSwiftClass继承自UIViewController也就是NSObject,Swift为了兼容OC,所以继承自NSObject的类都保留了他的动态性,所以我们能通过runtime拿到他的属性和方法.
+
+b. 方法替代
+在 Swift 中还是可以使用 Method Swizzling 的，只是我的意见是，绝大部分时候不应该出现在实际的产品代码里。如果你想通过 swizzling 快速解决问题的话，那更好的办法就是想出一个更好的架构，重构你的代码。
+
+c.JSPatch
+http://www.jianshu.com/p/5102fa8d7f63
+
+1： 继承自NSObject的Swift类，其继承自父类的方法具有动态性，其他自定义方法、属性需要加dynamic修饰才可以获得动态性。 
+2： 若方法的参数、属性类型为Swift特有、无法映射到Objective-C的类型(如Character、Tuple)，则此方法、属性无法添加dynamic修饰（会编译错误）。 
+3：纯Swift类没有动态性，但在方法、属性前添加dynamic修饰可以获得动态性。
+
+
+

@@ -1,0 +1,6 @@
+
+如何实现： tableview在滑动到当前的cell时优先加载，划出界面的cancel掉？
+
+
+
+

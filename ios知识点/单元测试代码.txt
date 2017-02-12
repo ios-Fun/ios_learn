@@ -1,0 +1,9 @@
+
+使用RAC时的单元测试框架
+https://github.com/kiwi-bdd/Kiwi
+
+https://github.com/erikdoe/ocmock
+
+
+
+

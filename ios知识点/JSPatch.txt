@@ -1,4 +1,5 @@
-
+原理：
+http://www.2cto.com/kf/201604/497522.html
 
 OC转js工具
 JSPatch Convertor

@@ -1,7 +1,8 @@
 kvo的原理？？
-
+当观察某对象A时，KVO机制动态创建一个对象A当前类的子类，并为这个新的子类重写了被观察属性keyPath的setter 方法。setter 方法随后负责通知观察对象属性的改变状况。
 
 kvc的原理？？
+http://www.cnblogs.com/Free-Thinker/p/5919043.html
 
 
 

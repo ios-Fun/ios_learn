@@ -2,6 +2,10 @@
 
 NSAutoRealeasePool？？？
 
+1. delegate为什么要用weak修饰？
+http://www.cocoachina.com/bbs/read.php?tid-202578.html
+
+
 iOS面试题主要有：
 1、多线程、特别是NSOperation 和 GCD 的内部原理。
 2、运行时机制的原理和运用场景。

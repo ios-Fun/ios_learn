@@ -4,6 +4,8 @@
 
 http://blog.csdn.net/judy_luo/article/details/51025210
 
+https://www.zhihu.com/question/36999574
+
 a. 方法,属性
 动态性最重要的一点就是拿到某个类的方法和属性
 

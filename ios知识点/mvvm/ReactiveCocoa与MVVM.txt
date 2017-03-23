@@ -1,6 +1,10 @@
+http://www.tuicool.com/articles/rI7ZNn
 
 
 AOP:
+
+
+MVP???
 
 MVVM：Model-view-view model
 
@@ -12,6 +16,16 @@ MVVM：Model-view-view model
 3. 将 UITableView 的 Data Source 分离到另外一个类中。
 
 构造 ViewModel？？？
+
+在此，我们可以定义一个好的架构应该具备的特点：
+
+任务均衡分摊给具有清晰角色的实体
+
+可测试性通常都来自与上一条（对于一个合适的架构是非常容易）
+
+易用性和低成本维护
+
+直到进行 单元测试 的时候才会发现问题越来越明显。因为你的ViewController和View是紧密耦合的，对它们进行测试就显得很艰难-
 
 专门构造存储类
 

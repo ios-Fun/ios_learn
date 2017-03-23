@@ -1,0 +1,25 @@
+
+1. 旋转
+_imageView.layer.transform = CATransform3DMakeRotation(M_PI/6, 1, 0, 0);
+
+2. 摇晃，拖动
+CAKeyframeAnimation *animation = [CAKeyframeAnimation animation];
+    animation.keyPath = @"position.x";
+    animation.values = @[ @0, @10, @-10, @10, @0 ];
+    animation.keyTimes = @[ @0, @(1 / 6.0), @(3 / 6.0), @(5 / 6.0), @1 ];
+    animation.duration = 0.4;
+    
+    animation.additive = YES;
+
+3. 贝塞尔曲线
+CAShapeLayer
+UIBezierPath
+
+4. 页面3d翻转
+_view0.layer.transform = CATransform3DPerspect(mat0, CGPointZero, 500);
+
+5. 
+
+
+
+

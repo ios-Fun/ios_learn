@@ -21,12 +21,19 @@ SDWebImage原理？？
 
 //检测循环引用
 https://github.com/facebook/FBRetainCycleDetector
+FBRetainCycleDetector 、 FBAllocationTracker 、 FBMemoryProfiler 
 
 https://github.com/ibireme/YYDispatchQueuePool
 //缓存池
 
 https://github.com/forkingdog/UITableView-FDTemplateLayoutCell
 //cell动态高度
+
+//插件—实时修改代码
+https://github.com/johnno1962/injectionforxcode
+
+//webview
+https://github.com/marcuswestin/WebViewJavascriptBridge
 
 
 
